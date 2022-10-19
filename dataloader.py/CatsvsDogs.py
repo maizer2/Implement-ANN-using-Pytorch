@@ -18,9 +18,9 @@ class CatsvsDogs(torch.utils.data.Dataset):
         def get_img_path(root: str):
             # "/data/DataSet/Cats-vs-Dogs/"
             if root[-1] == "/":
-                self.root = root
+                root = root
             else:
-                self.root = root + "/"
+                root = root + "/"
 
             dog_img_path = glob(root + "PetImages/Dog/*.jpg")
             cat_img_path = glob(root + "PetImages/Cat/*.jpg")
