@@ -21,7 +21,7 @@ if __name__ == "__main__":
     ##################
 
     num_gpus = 3
-    batch_size = 128
+    batch_size = 10
     num_workers = 4
     num_epochs = 20000
     device = torch.device("cuda" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
@@ -78,21 +78,25 @@ if __name__ == "__main__":
 
     for epochs in tqdm(range(1, num_epochs + 1)):
         for idx, (imgs, _) in enumerate(train_loader):
-            netG.zero_grad(), netD.zero_grad()
+            optimizerD.zero_grad(), optimizerG.zero_grad()
 
             x = imgs.to(device)
             y = torch.ones((x.size(0), ), dtype=torch.float, device=device)
             noise = torch.randn((x.size(0), latent_space_vector, 1, 1), dtype=torch.float, device=device)
+            fake = netG(noise)
 
             ##########################
             # Training Discriminator #
             ##########################
 
+            ##################################
+            # 1. Discriminate input -> y_hat #
+            # 2. Criterion y_hat, y          #
+            ##################################
+
             y_hat = netD(x).view(-1)
             loss = criterion(y_hat, y)
-            
-            print(loss)
-
+            loss.backward()
             
             break
         break
