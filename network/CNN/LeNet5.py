@@ -1,29 +1,19 @@
-import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.utils.data as data
-
-import torchvision
-import torchvision.transforms as transforms
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-from torchvision.utils import make_grid
-
-from tqdm import tqdm
 
 # -----------------------------------------------
 
-# Input 1x32x32
-# layer1 1x32x32 -> 6x28x28
-# layer2 6x28x28 -> 6x14x14
-# layer3 6x14x14 -> 16x10x10
-# layer4 16x10x10 -> 16x5x5
-# To Linear 16x5x5 -> 16*5*5(450)
-# layer5 450 -> 120
-# layer6 120 -> 84
-# layer7 84 -> 10 (Classification)
+'''
+Input 1x32x32
+layer1 1x32x32 -> 6x28x28
+layer2 6x28x28 -> 6x14x14
+layer3 6x14x14 -> 16x10x10
+layer4 16x10x10 -> 16x5x5
+To Linear 16x5x5 -> 16*5*5(450)
+layer5 450 -> 120
+layer6 120 -> 84
+layer7 84 -> 10 (Classification)
+'''
+
 class LeNet5(nn.Moduel):
     def __init__(self):
         super().__init__()
@@ -76,4 +66,10 @@ class LeNet5(nn.Moduel):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        x = x.view(-1,)
+        x = x.view(-1, 16*5*5)
+
+        x = self.layer5(x)
+        x = self.layer6(x)
+        x = self.layer7(x)
+        
+        return x
