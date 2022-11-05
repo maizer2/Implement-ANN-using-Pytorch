@@ -33,3 +33,25 @@ def train_LeNet5(
 
     device = torch.device("cuda" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
+    ###########
+    # Prepare #
+    ###########
+
+    train_data = datasets.MNIST(
+        root="/data/DataSet/",
+        train=True,
+        download=True,
+        transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5), (0.5))
+        ])
+    )
+
+    train_loader = data.DataLoader(
+        dataset=train_data,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+    )
+
+    model = LeNet5().to(device)

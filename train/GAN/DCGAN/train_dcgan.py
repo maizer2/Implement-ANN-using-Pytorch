@@ -54,8 +54,7 @@ def train_dcgan(
         dataset=train_data,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=num_workers,
-
+        num_workers=num_workers
     )
 
     netG = Generator().to(device)
