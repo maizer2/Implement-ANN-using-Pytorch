@@ -170,6 +170,7 @@ def train_dcgan(
                 writer.add_image("Fake", fake_grid, epochs)
                 writer.add_scalar("Loss/Discriminator", disc_loss.item(), epochs)
                 writer.add_scalar("Loss/Generator", gen_loss.item(), epochs)
-
+    
+    writer.close()
     torch.save(netG.state_dict(), "network/GAN/dcgan/netG.pth")
     torch.save(netD.state_dict(), "network/GAN/dcgan/netD.pth")

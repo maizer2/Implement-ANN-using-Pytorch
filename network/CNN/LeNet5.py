@@ -14,14 +14,13 @@ layer6 120 -> 84
 layer7 84 -> 10 (Classification)
 '''
 
-class LeNet5(nn.Moduel):
+class LeNet5(nn.Module):
     def __init__(self):
         super().__init__()
 
         # 1x32x32 -> 6x28x28
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, 6, 5, 1, 0, bias=False),
-            nn.BatchNorm2d(6),
             nn.ReLU(True)
         )
         # 6x28x28 -> 6x14x14
@@ -32,7 +31,6 @@ class LeNet5(nn.Moduel):
         # 6x14x14 -> 16x10x10
         self.layer3 = nn.Sequential(
             nn.Conv2d(6, 16, 5, 1, 0, bias=False),
-            nn.BatchNorm2d(16),
             nn.ReLU(True)
         )
         # 16x10x10 -> 16x5x5
@@ -43,14 +41,12 @@ class LeNet5(nn.Moduel):
         # 16*5*5 -> 120
         self.layer5 = nn.Sequential(
             nn.Linear(16*5*5, 120, bias=False),
-            nn.BatchNorm2d(120),
             nn.ReLU(True)
         )
 
         # 120 -> 84
         self.layer6 = nn.Sequential(
             nn.Linear(120, 84, bias=False),
-            nn.BatchNorm2d(84),
             nn.ReLU(True)
         )
 
@@ -65,9 +61,7 @@ class LeNet5(nn.Moduel):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
         x = x.view(-1, 16*5*5)
-
         x = self.layer5(x)
         x = self.layer6(x)
         x = self.layer7(x)
