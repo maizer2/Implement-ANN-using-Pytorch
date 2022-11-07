@@ -64,7 +64,7 @@ def train_LeNet5(
     model = LeNet5().to(device)
     model.apply(weights_init)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(device)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
     #########

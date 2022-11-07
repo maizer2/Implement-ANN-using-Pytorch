@@ -18,7 +18,8 @@ class vgg_layers(nn.Module):
 
             if out_channels == "M":
                 layers.append(
-                    nn.MaxPool2d(2, 1, 1)
+                    # nn.MaxPool2d(2, 1, 1)
+                    nn.MaxPool2d(2)
                 )
             else:
                 layers.append(

@@ -56,7 +56,7 @@ def train_AlexNet(
     model = AlexNet(in_channels=1, out_features=10).to(device)
     model.apply(weights_init)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(device)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
     writer = SummaryWriter("Tensorboard/AlexNet")
