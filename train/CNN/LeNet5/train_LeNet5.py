@@ -11,6 +11,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
 import matplotlib.pyplot as plt
+import os
 
 from tqdm import tqdm
 from torchsummary import summary
@@ -21,17 +22,19 @@ from typing import Tuple
 
 def train_LeNet5(
     num_gpus: int = 3,
-    batch_size: int = 30000,
+    use_gpu: int = 0,
+    batch_size: int = 60000,
     num_workers: int = 4,
-    num_epochs: int = 5000,
+    num_epochs: int = 10000,
     check_point: int = 200,
-    lr: float = 0.0002
+    lr: float = 0.0002,
+    save_root: str = "train/CNN/LeNet5/checkpoint/"
 ):
     ##################
     # Hyperparameter #
     ##################
 
-    device = torch.device("cuda" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
+    device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
     ###########
     # Prepare #
@@ -91,7 +94,8 @@ def train_LeNet5(
             optimizer.step()
 
             if epochs % check_point == 0:
-                writer.add_scalar("Loss", loss.item(), epochs)
+                writer.add_scalar("LeNet5/Loss", loss.item(), epochs)
     
     writer.close()
-    torch.save(model.state_dict(), "train/CNN/LeNet5/checkpoint/model.pth")
+    os.makedirs(save_root, exist_ok=True)
+    torch.save(model.state_dict(), f"{save_root}/{num_epochs}_model.pth")

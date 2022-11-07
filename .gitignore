@@ -5,4 +5,10 @@ dataloader/__pycache__
 Tensorboard
 main.ipynb
 data/
-network/GAN/__pycache__/dcgan.cpython-39.pyc
+network/GAN/__pycache__/
+network/__pycache__/
+train/CNN/AlexNet/__pycache__/
+train/CNN/LeNet5/__pycache__
+network/CNN/__pycache__/
+network/CNN/__pycache__/
+main.py
