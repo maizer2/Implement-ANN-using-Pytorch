@@ -11,6 +11,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
 import matplotlib.pyplot as plt
+import os
 
 from tqdm import tqdm
 from torchsummary import summary
@@ -21,13 +22,15 @@ from typing import Tuple
 
 def train_AlexNet(
     num_gpus: int = 3,
+    use_gpu: int = 1,
     batch_size: int = 7300,
     num_workers: int = 4,
-    num_epochs: int = 5000,
+    num_epochs: int = 10000,
     check_point: int = 200,
-    lr: float = 0.0002
+    lr: float = 0.0002,
+    save_root: str = "train/CNN/AlexNet/checkpoint/"
 ):
-    device = torch.device("cuda:1" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
+    device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
     train_data = datasets.MNIST(
         root="/data/DataSet/",
@@ -74,4 +77,5 @@ def train_AlexNet(
                 writer.add_scalar("AlexNet/Loss", loss.item(), epochs)
 
     writer.close()
-    torch.save(model.state_dict(), "train/CNN/AlexNet/checkpoint/model.pth")
+    os.makedirs(save_root, exist_ok=True)
+    torch.save(model.state_dict(), f"{save_root}/{num_epochs}_model.pth")
