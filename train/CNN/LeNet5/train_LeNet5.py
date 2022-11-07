@@ -24,6 +24,7 @@ def train_LeNet5(
     num_gpus: int = 3,
     use_gpu: int = 0,
     batch_size: int = 60000,
+    img_channels: int = 3,
     num_workers: int = 4,
     num_epochs: int = 10000,
     check_point: int = 200,
@@ -40,15 +41,24 @@ def train_LeNet5(
     # Prepare #
     ###########
 
+    if img_channels == 3:
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.Resize((227, 227))
+        ])
+    elif img_channels == 1:
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5), (0.5)),
+            transforms.Resize((227, 227))
+        ])
+
     train_data = datasets.MNIST(
         root="/data/DataSet/",
         train=True,
         download=True,
-        transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5), (0.5)),
-            transforms.Resize((32, 32))
-        ])
+        transform=transform
     )
 
     train_loader = data.DataLoader(
@@ -73,7 +83,7 @@ def train_LeNet5(
     
     writer = SummaryWriter("Tensorboard/LeNet5")
 
-    for epochs in tqdm(range(0, num_epochs + 1)):
+    for epoch in tqdm(range(0, num_epochs + 1)):
         for imgs, labels in train_loader:
             optimizer.zero_grad()
 
@@ -93,8 +103,8 @@ def train_LeNet5(
             loss.backward()
             optimizer.step()
 
-            if epochs % check_point == 0:
-                writer.add_scalar("LeNet5/Loss", loss.item(), epochs)
+            if epoch % check_point == 0:
+                writer.add_scalar("LeNet5/Loss", loss.item(), epoch)
     
     writer.close()
     os.makedirs(save_root, exist_ok=True)

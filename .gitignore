@@ -12,3 +12,4 @@ train/CNN/LeNet5/__pycache__
 network/CNN/__pycache__/
 network/CNN/__pycache__/
 main.py
+train/CNN/VGG/__pycache__/
