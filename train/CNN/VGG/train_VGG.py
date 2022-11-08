@@ -33,6 +33,7 @@ def train_VGG(
     save_root: str = "train/CNN/VGG/checkpoint/"
     ):
 
+    os.makedirs(save_root, exist_ok=True)
     device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
     if img_channels == 3:
@@ -99,9 +100,7 @@ def train_VGG(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"VGG/VGG{vgg_layers}/Loss", epoch)
+                writer.add_scalar(f"VGG/VGG{vgg_layers}/Loss", loss.item(), epoch)
+                torch.save(model.state_dict(), f"{save_root}/VGG{vgg_layers}/{epoch}_model.pth")
 
     writer.close()
-
-    os.makedirs(save_root, exist_ok=True)
-    torch.save(model.state_dict(), f"{save_root}/VGG{vgg_layers}/{num_epochs}_model.pth")

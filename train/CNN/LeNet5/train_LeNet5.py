@@ -35,6 +35,7 @@ def train_LeNet5(
     # Hyperparameter #
     ##################
 
+    os.makedirs(save_root, exist_ok=True)
     device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
     ###########
@@ -105,7 +106,6 @@ def train_LeNet5(
 
             if epoch % check_point == 0:
                 writer.add_scalar("LeNet5/Loss", loss.item(), epoch)
-    
+                torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
+
     writer.close()
-    os.makedirs(save_root, exist_ok=True)
-    torch.save(model.state_dict(), f"{save_root}/{num_epochs}_model.pth")

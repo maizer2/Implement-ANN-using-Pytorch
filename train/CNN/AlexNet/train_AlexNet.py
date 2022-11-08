@@ -24,11 +24,12 @@ def train_AlexNet(
     batch_size: int = 7300,
     img_channels: int = 3,
     num_workers: int = 4,
-    num_epochs: int = 10000,
+    num_epochs: int = 3000,
     check_point: int = 200,
     lr: float = 0.0002,
     save_root: str = "train/CNN/AlexNet/checkpoint/"
     ):
+    os.makedirs(save_root, exist_ok=True)
     device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
     if img_channels == 3:
@@ -84,7 +85,6 @@ def train_AlexNet(
 
             if epoch % check_point == 0:
                 writer.add_scalar("AlexNet/Loss", loss.item(), epoch)
+                torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
 
     writer.close()
-    os.makedirs(save_root, exist_ok=True)
-    torch.save(model.state_dict(), f"{save_root}/{num_epochs}_model.pth")
