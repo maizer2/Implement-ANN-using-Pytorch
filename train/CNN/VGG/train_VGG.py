@@ -22,18 +22,18 @@ from typing import Tuple
 def train_VGG(
     num_gpus: int = 3,
     use_gpu: int = 0,
-    batch_size: int = 12,
+    batch_size: int = 500,
     img_channels: int = 3,
-    vgg_layers: int = 11,
+    layers: int = 11,
     num_workers: int = 4,
     num_epochs: int = 10000,
     check_point: int = 200,
-    lr: float = 0.0002,
+    lr: float = 0.01,
     betas: Tuple[float] = (0.5, 0.999),
     save_root: str = "train/CNN/VGG/checkpoint/"
     ):
 
-    os.makedirs(save_root, exist_ok=True)
+    os.makedirs(f"{save_root}/VGG{layers}", exist_ok=True)
     device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
     if img_channels == 3:
@@ -66,17 +66,17 @@ def train_VGG(
     labels_temp = train_data.class_to_idx
     labels_map = dict(zip(labels_temp.values(), labels_temp.keys()))
 
-    if vgg_layers == 13:
+    if layers == 13:
         vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
 
-    elif vgg_layers == 16:
+    elif layers == 16:
         vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
     
-    elif vgg_layers == 19:
+    elif layers == 19:
         vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M']
 
-    else: # vgg_layers == 11 or enter wrong number
-        vgg_layers = 11
+    else: # layers == 11 or enter wrong number
+        layers = 11
         vgg_config = [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
 
     model = VGG(vgg_config, in_channels=img_channels).to(device)
@@ -85,7 +85,7 @@ def train_VGG(
     criterion = nn.CrossEntropyLoss().to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=betas)
 
-    writer = SummaryWriter(f"Tensorboard/VGG/VGG{vgg_layers}")
+    writer = SummaryWriter(f"Tensorboard/VGG/VGG{layers}")
 
     for epoch in tqdm(range(0, num_epochs + 1)):
         for imgs, labels in train_loader:
@@ -100,7 +100,7 @@ def train_VGG(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"VGG/VGG{vgg_layers}/Loss", loss.item(), epoch)
-                torch.save(model.state_dict(), f"{save_root}/VGG{vgg_layers}/{epoch}_model.pth")
+                writer.add_scalar(f"Loss/VGG/VGG{layers}", loss.item(), epoch)
+                torch.save(model.state_dict(), f"{save_root}/VGG{layers}/{epoch}_model.pth")
 
     writer.close()

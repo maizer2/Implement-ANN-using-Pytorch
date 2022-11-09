@@ -24,11 +24,11 @@ def train_LeNet5(
     num_gpus: int = 3,
     use_gpu: int = 0,
     batch_size: int = 60000,
-    img_channels: int = 3,
+    img_channels: int = 1,
     num_workers: int = 4,
     num_epochs: int = 10000,
     check_point: int = 200,
-    lr: float = 0.0002,
+    lr: float = 0.001,
     save_root: str = "train/CNN/LeNet5/checkpoint/"
 ):
     ##################
@@ -46,13 +46,13 @@ def train_LeNet5(
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            transforms.Resize((227, 227))
+            transforms.Resize((32, 32))
         ])
     elif img_channels == 1:
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5), (0.5)),
-            transforms.Resize((227, 227))
+            transforms.Resize((32, 32))
         ])
 
     train_data = datasets.MNIST(
@@ -105,7 +105,7 @@ def train_LeNet5(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar("LeNet5/Loss", loss.item(), epoch)
+                writer.add_scalar("Loss/LeNet5", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
 
     writer.close()

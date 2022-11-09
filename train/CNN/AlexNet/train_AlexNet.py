@@ -26,7 +26,7 @@ def train_AlexNet(
     num_workers: int = 4,
     num_epochs: int = 3000,
     check_point: int = 200,
-    lr: float = 0.0002,
+    lr: float = 0.001,
     save_root: str = "train/CNN/AlexNet/checkpoint/"
     ):
     os.makedirs(save_root, exist_ok=True)
@@ -84,7 +84,7 @@ def train_AlexNet(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar("AlexNet/Loss", loss.item(), epoch)
+                writer.add_scalar("Loss/AlexNet", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
 
     writer.close()

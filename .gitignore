@@ -13,3 +13,5 @@ network/CNN/__pycache__/
 network/CNN/__pycache__/
 main.py
 train/CNN/VGG/__pycache__/
+train/CNN/VGG/checkpoint/
+train/CNN/ResNet/__pycache__/
