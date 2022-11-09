@@ -118,7 +118,7 @@ def train_ResNet(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/ResNet/ResNet{layers}", loss.item(), epoch)
+                writer.add_scalar(f"Loss/ResNet/ResNet{layers}/{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/ResNet{layers}/{epoch}_model.pth")
 
     writer.close()

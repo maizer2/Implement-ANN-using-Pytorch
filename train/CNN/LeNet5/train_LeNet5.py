@@ -105,7 +105,7 @@ def train_LeNet5(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar("Loss/LeNet5", loss.item(), epoch)
+                writer.add_scalar(f"Loss/LeNet5/{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
 
     writer.close()

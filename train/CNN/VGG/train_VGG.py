@@ -100,7 +100,7 @@ def train_VGG(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/VGG/VGG{layers}", loss.item(), epoch)
+                writer.add_scalar(f"Loss/VGG/VGG{layers}/{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/VGG{layers}/{epoch}_model.pth")
 
     writer.close()
