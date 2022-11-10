@@ -77,7 +77,7 @@ def train_ResNet(
 
     elif layers == 50:
         config = resnet_config(
-            block=BuildingBlock,
+            block=Bottleneck,
             n_blocks=[3, 4, 6, 3],
             channels=[64, 128, 256, 512])
     elif layers == 101:
@@ -93,7 +93,7 @@ def train_ResNet(
     else: # layers == 18 or enter wrong number
         layers = 18
         config = resnet_config(
-            block=Bottleneck,
+            block=BuildingBlock,
             n_blocks=[2, 2, 2, 2],
             channels=[64, 128, 256, 512])
 
@@ -112,7 +112,7 @@ def train_ResNet(
             x = imgs.to(device)
             y = labels.to(device)
 
-            y_hat = model(x)
+            y_hat, _ = model(x)
             loss = criterion(y_hat, y)
             loss.backward()
             optimizer.step()

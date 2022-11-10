@@ -8,12 +8,12 @@ class BuildingBlock(nn.Module):
         super().__init__()
 
         self.layer = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, 3, stride, 0, bias=False),
+            nn.Conv2d(in_channels, out_channels, 3, stride, 1, bias=False),
             nn.BatchNorm2d(out_channels),
 
             nn.ReLU(True),
 
-            nn.Conv2d(out_channels, self.expansion*out_channels, 3, stride, 0, bias=False),
+            nn.Conv2d(out_channels, self.expansion*out_channels, 3, 1, 1, bias=False),
             nn.BatchNorm2d(self.expansion*out_channels)
         )
 
@@ -39,18 +39,20 @@ class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, in_channels: int, out_channels: int, stride=1, downsample=False):
+        super().__init__()
+
         self.layer = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, 1, stride, 0, bias=False),
+            nn.Conv2d(in_channels, out_channels, 1, 1, 0, bias=False),
             nn.BatchNorm2d(out_channels),
             
             nn.ReLU(True),
 
-            nn.Conv2d(out_channels, out_channels, 3, stride, 0, bias=False),
+            nn.Conv2d(out_channels, out_channels, 3, stride, 1, bias=False),
             nn.BatchNorm2d(out_channels),
 
             nn.ReLU(True),
 
-            nn.Conv2d(out_channels, self.expansion*out_channels, 3, stride, 0, bias=False),
+            nn.Conv2d(out_channels, self.expansion*out_channels, 1, 1, 0, bias=False),
             nn.BatchNorm2d(self.expansion*out_channels)
         )
 
@@ -81,13 +83,14 @@ class ResNet(nn.Module):
         
         assert len(n_blocks) == len(channels) == 4
 
-        # in_channels x 224 x 224 -> 64x112x112
+        # in_channels x 224 x 224 -> 64x112x112 -> 64x56x56
         self.layer1 = nn.Sequential(
             nn.Conv2d(in_channels, self.in_channels, 7, 2, 3, bias=False),
             nn.BatchNorm2d(self.in_channels),
-            nn.ReLU(True)
+            nn.ReLU(True),
+            nn.MaxPool2d(3, 2, 1)
         )
-        # 64x112x112 -> 64x56x56
+        # 64x56x56 -> 64x56x56
         self.layer2 = self.get_resnet_layer(block, n_blocks[0], channels[0])
 
         # 64x56x56 -> 128x28x28
@@ -101,7 +104,10 @@ class ResNet(nn.Module):
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        self.layer6 = nn.Linear(self.in_channels, out_features)
+        self.layer6 = nn.Sequential(
+            nn.Linear(self.in_channels, out_features),
+            nn.Softmax(1)
+            )
 
     def get_resnet_layer(self, block, n_blocks, channels, stride=1):
         layers = []

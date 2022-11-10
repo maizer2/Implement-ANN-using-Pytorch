@@ -15,3 +15,4 @@ main.py
 train/CNN/VGG/__pycache__/
 train/CNN/VGG/checkpoint/
 train/CNN/ResNet/__pycache__/
+train/CNN/ResNet/checkpoint/
