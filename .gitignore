@@ -1,8 +1,5 @@
 Inference
-jupyter/model/1. MLP/Tensorboard
-jupyter/model/2. CNN/Tensorboard
 dataloader/__pycache__
-Tensorboard
 main.ipynb
 data/
 network/GAN/__pycache__/
@@ -15,3 +12,5 @@ main.py
 train/CNN/VGG/__pycache__/
 train/CNN/VGG/checkpoint/
 train/CNN/ResNet/__pycache__/
+train/CNN/ResNet/checkpoint/
+Tensorboard/

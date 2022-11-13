@@ -30,7 +30,7 @@ def train_ResNet(
     num_workers: int = 4,
     num_epochs: int = 10000,
     check_point: int = 200,
-    lr: float = 1e-04,
+    lr: float = 1e-7,
     betas: Tuple[float] = (0.5, 0.999),
     save_root: str = "train/CNN/ResNet/checkpoint/"
     ):
@@ -77,7 +77,7 @@ def train_ResNet(
 
     elif layers == 50:
         config = resnet_config(
-            block=BuildingBlock,
+            block=Bottleneck,
             n_blocks=[3, 4, 6, 3],
             channels=[64, 128, 256, 512])
     elif layers == 101:
@@ -93,7 +93,7 @@ def train_ResNet(
     else: # layers == 18 or enter wrong number
         layers = 18
         config = resnet_config(
-            block=Bottleneck,
+            block=BuildingBlock,
             n_blocks=[2, 2, 2, 2],
             channels=[64, 128, 256, 512])
 
@@ -101,7 +101,7 @@ def train_ResNet(
     model.apply(weights_init)
 
     criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=lr, betas=betas)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
     writer = SummaryWriter(f"Tensorboard/ResNet/ResNet{layers}")
 
@@ -118,7 +118,7 @@ def train_ResNet(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/ResNet/ResNet{layers}", loss.item(), epoch)
+                writer.add_scalar(f"Loss/ResNet/ResNet{layers}/{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/ResNet{layers}/{epoch}_model.pth")
 
     writer.close()

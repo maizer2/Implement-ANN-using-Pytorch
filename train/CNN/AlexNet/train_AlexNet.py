@@ -84,7 +84,7 @@ def train_AlexNet(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar("Loss/AlexNet", loss.item(), epoch)
+                writer.add_scalar(f"Loss/AlexNet/{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
 
     writer.close()

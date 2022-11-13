@@ -24,7 +24,7 @@ def train_VGG(
     use_gpu: int = 0,
     batch_size: int = 500,
     img_channels: int = 3,
-    layers: int = 11,
+    layers: int = 11, #13, 16, 19
     num_workers: int = 4,
     num_epochs: int = 10000,
     check_point: int = 200,
@@ -100,7 +100,7 @@ def train_VGG(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/VGG/VGG{layers}", loss.item(), epoch)
+                writer.add_scalar(f"Loss/VGG/VGG{layers}/{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/VGG{layers}/{epoch}_model.pth")
 
     writer.close()
