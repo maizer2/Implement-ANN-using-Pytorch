@@ -30,7 +30,7 @@ def train_ResNet(
     num_workers: int = 4,
     num_epochs: int = 10000,
     check_point: int = 200,
-    lr: float = 1e-04,
+    lr: float = 1e-7,
     betas: Tuple[float] = (0.5, 0.999),
     save_root: str = "train/CNN/ResNet/checkpoint/"
     ):
@@ -101,7 +101,7 @@ def train_ResNet(
     model.apply(weights_init)
 
     criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=lr, betas=betas)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
     writer = SummaryWriter(f"Tensorboard/ResNet/ResNet{layers}")
 
@@ -112,7 +112,7 @@ def train_ResNet(
             x = imgs.to(device)
             y = labels.to(device)
 
-            y_hat, _ = model(x)
+            y_hat = model(x)
             loss = criterion(y_hat, y)
             loss.backward()
             optimizer.step()
