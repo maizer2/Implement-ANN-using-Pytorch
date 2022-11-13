@@ -13,6 +13,6 @@ from train.CNN.ResNet.train_ResNet import train_ResNet
 # train_VGG(batch_size=32, img_channels=1, layers=19, use_gpu=0)
 # train_ResNet(batch_size=32, img_channels=1, layers=18, use_gpu=0)
 # train_ResNet(batch_size=32, img_channels=1, layers=34, use_gpu=0)
-train_ResNet(batch_size=32, img_channels=1, layers=50, use_gpu=0)
+# train_ResNet(batch_size=32, img_channels=1, layers=50, use_gpu=0)
 # train_ResNet(batch_size=32, img_channels=1, layers=101, use_gpu=1)
-# train_ResNet(batch_size=32, img_channels=1, layers=152, use_gpu=2)
+train_ResNet(batch_size=32, img_channels=1, layers=152, use_gpu=2)
