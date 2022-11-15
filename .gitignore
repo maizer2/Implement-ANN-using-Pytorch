@@ -14,3 +14,7 @@ train/CNN/VGG/checkpoint/
 train/CNN/ResNet/__pycache__/
 train/CNN/ResNet/checkpoint/
 Tensorboard/
+train/VAE/__pycache__/
+train/AE/__pycache__/
+network/AE/__pycache__/
+network/VAE/__pycache__/

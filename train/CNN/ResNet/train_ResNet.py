@@ -29,7 +29,7 @@ def train_ResNet(
     layers:int = 18, # 34, 50, 101, 152
     num_workers: int = 4,
     num_epochs: int = 10000,
-    check_point: int = 200,
+    check_point: int = 20,
     lr: float = 1e-7,
     betas: Tuple[float] = (0.5, 0.999),
     save_root: str = "train/CNN/ResNet/checkpoint/"
@@ -118,7 +118,7 @@ def train_ResNet(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/ResNet/ResNet{layers}/{lr}", loss.item(), epoch)
+                writer.add_scalar(f"Loss/ResNet/ResNet{layers}/batch:{batch_size}, lr:{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/ResNet{layers}/{epoch}_model.pth")
 
     writer.close()

@@ -27,7 +27,7 @@ def train_dcgan(
     img_channels: int = 3,
     num_workers: int = 4,
     num_epochs: int = 5000,
-    check_point: int = 200,
+    check_point: int = 20,
     latent_space_vector: int = 100,
     lr: float = 0.0002,
     betas: Tuple[float] = (0.5, 0.999),

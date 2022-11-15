@@ -27,7 +27,7 @@ def train_LeNet5(
     img_channels: int = 1,
     num_workers: int = 4,
     num_epochs: int = 10000,
-    check_point: int = 200,
+    check_point: int = 20,
     lr: float = 0.001,
     save_root: str = "train/CNN/LeNet5/checkpoint/"
 ):
@@ -105,7 +105,7 @@ def train_LeNet5(
             optimizer.step()
 
             if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/LeNet5/{lr}", loss.item(), epoch)
+                writer.add_scalar(f"Loss/LeNet5/batch:{batch_size}, lr:{lr}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{save_root}/{epoch}_model.pth")
 
     writer.close()
