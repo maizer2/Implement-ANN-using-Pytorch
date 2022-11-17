@@ -23,7 +23,7 @@ from typing import Tuple
 def train_LeNet5(
     num_gpus: int = 3,
     use_gpu: int = 0,
-    batch_size: int = 60000,
+    batch_size: int = 2**5,
     img_channels: int = 1,
     num_workers: int = 4,
     num_epochs: int = 10000,
