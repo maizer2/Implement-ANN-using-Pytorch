@@ -19,3 +19,4 @@ train/AE/__pycache__/
 network/AE/__pycache__/
 network/VAE/__pycache__/
 train/VAE/vanilaVAE/__pycache__/
+train/GAN/VanilaGAN/__pycache__/train_VanilaGAN.cpython-38.pyc

@@ -1,4 +1,5 @@
-from network.GAN.dcgan import Generator, Discriminator, weights_init
+from network.GAN.dcgan import Generator, Discriminator
+from network.weights_init import weights_init
 
 import torch
 import torch.nn as nn
