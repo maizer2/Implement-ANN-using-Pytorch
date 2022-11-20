@@ -17,6 +17,12 @@ from tqdm import tqdm
 from torchsummary import summary
 from typing import Tuple
 
+# Multi GPU using torch.distributed and torch.nn.parallel
+import torch.distributed as dist
+import torch.distributed.autograd as dist_autograd
+from torch.distributed.optim import DistributedOptimizer
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 # ---------------------------------------------------------------------------------- #
 
 def train_VanilaGAN(
@@ -53,40 +59,56 @@ def train_VanilaGAN(
         transform=transform
     )
 
+    train_sampler = data.DistributedSampler(
+        dataset=train_data,
+        num_replicas=world_size,
+        rank=rank,
+        shuffle=True
+    )
+
     train_loader = data.DataLoader(
         dataset=train_data,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=False,
+        sampler=train_sampler,
         num_workers=num_workers,
     )
 
     netG = Generator().to(device)
     netD = Discriminator().to(device)
 
+
     netG.apply(weights_init)
     netD.apply(weights_init)
 
     criterion = nn.BCELoss().to(device)
-    optim_G = optim.Adam(netG.parameters(), lr=lr, betas=betas)
-    optim_D = optim.Adam(netD.parameters(), lr=lr, betas=betas)
 
-    writer = SummaryWriter("Tensorboard/VanilaGAN")
+    if (num_gpus > 1) and (device.type == "cuda"):
+        netG = DDP(netG, list(range(num_gpus)), device)
+        netD = DDP(netD, list(range(num_gpus)), device)
+
+        optim_G = DistributedOptimizer(optim.Adam, )
+    else:
+        optim_G = optim.Adam(netG.parameters(), lr=lr, betas=betas)
+        optim_D = optim.Adam(netD.parameters(), lr=lr, betas=betas)
+
+    writer = SummaryWriter("Tensorboard/GAN/VanilaGAN")
 
     for epoch in tqdm(range(0, num_epochs + 1)):
         for imgs, _ in train_loader:
 
             x = imgs.to(device)
-            fake = netG(torch.randn((batch_size, latent_space_vector)))
+            fake = netG(torch.randn((x.size(0), latent_space_vector)).to(device))
 
-            y_real = torch.ones((batch_size, ), dtype= torch.cuda.float, device=device)
-            y_fake = torch.zeros((batch_size, ), dtype=torch.cuda.float, device=device)
+            y_real = torch.ones((x.size(0), ), dtype= torch.float, device=device)
+            y_fake = torch.zeros((x.size(0), ), dtype=torch.float, device=device)
 
             # Train Discriminator
 
             optim_D.zero_grad()
 
             y_real_hat = netD(x)
-            y_fake_hat = netG(fake)
+            y_fake_hat = netD(fake)
 
             loss_real = criterion(y_real_hat, y_real)
             loss_fake = criterion(y_fake_hat, y_fake)
@@ -100,7 +122,7 @@ def train_VanilaGAN(
 
             optim_G.zero_grad()
 
-            fake = netG(torch.randn((batch_size, latent_space_vector)))
+            fake = netG(torch.randn((x.size(0), latent_space_vector)).to(device))
 
             y_fake_hat = netD(fake)
 

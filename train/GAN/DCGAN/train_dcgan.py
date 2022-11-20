@@ -98,7 +98,7 @@ def train_dcgan(
     # Train #
     #########
 
-    writer = SummaryWriter("Tensorboard/DCGAN")
+    writer = SummaryWriter("Tensorboard/GAN/DCGAN")
 
     for epoch in tqdm(range(0, num_epochs + 1)):
         for idx, (imgs, _) in enumerate(train_loader):

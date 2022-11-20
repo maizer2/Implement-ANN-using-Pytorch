@@ -21,4 +21,4 @@ from train.GAN.VanilaGAN.train_VanilaGAN import train_VanilaGAN
 # train_ResNet(batch_size=32, img_channels=1, layers=152, use_gpu=2)
 # train_AE(batch_size=2048,num_epochs=1000, use_gpu=0, img_channels=1)
 # train_vanilaVAE(img_channels=1)
-train_VanilaGAN()
+# train_VanilaGAN()

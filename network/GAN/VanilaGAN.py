@@ -47,15 +47,15 @@ class Generator(nn.Module):
 
     def forward(self, z):
         z = self.model(z)
-        z = z.view(z.shape(0), self.img_channels, (self.out_features**(1/2))/self.img_channels, (self.out_features**(1/2))/self.img_channels)
+        z = z.view(-1, self.img_channels, int((self.out_features**(1/2))/self.img_channels), int((self.out_features**(1/2))/self.img_channels))
         return z
 
 class Discriminator(nn.Module):
     def __init__(
         self,
-        in_features: int = 1,
+        in_features: int = 784,
         hidden_features: Optional[List[int]] = None,
-        out_features: int = 10,
+        out_features: int = 1,
         ):
         super().__init__()
 
@@ -81,4 +81,5 @@ class Discriminator(nn.Module):
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.model(x)
+        x = x.view(x.size(0), -1)
+        return self.model(x).view(-1)
