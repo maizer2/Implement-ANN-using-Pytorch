@@ -20,3 +20,14 @@ network/AE/__pycache__/
 network/VAE/__pycache__/
 train/VAE/vanilaVAE/__pycache__/
 train/GAN/VanilaGAN/__pycache__/train_VanilaGAN.cpython-38.pyc
+train/CNN/LeNet5/checkpoint/
+train/GAN/DCGAN/checkpoint/
+train/GAN/VanilaGAN/checkpoint/
+train/GAN/VanilaGAN/__pycache__/train_VanilaGAN_mul.cpython-38.pyc
+.gitignore
+train/GAN/DCGAN/__pycache__/train_DCGAN_mul.cpython-38.pyc
+.gitignore
+train/GAN/DCGAN/__pycache__/train_dcgan.cpython-38.pyc
+train/GAN/DCGAN/__pycache__/train_DCGAN.cpython-38.pyc
+train/CNN/LeNet5/checkpoint/
+network/GAN/__pycache__/dcgan.cpython-38.pyc

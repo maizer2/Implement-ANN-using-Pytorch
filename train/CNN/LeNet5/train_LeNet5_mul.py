@@ -18,35 +18,28 @@ from torchsummary import summary
 from torch.utils.tensorboard import SummaryWriter
 from typing import Tuple
 
-# Multi GPU module
+# Multi GPU
 import torch.distributed as dist
-import torch.distributed.autograd as dist_autograd
-import torch.distributed.rpc as rpc
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.distributed.optim import DistributedOptimizer
-from torch.distributed.rpc import RRef
 
 # --------------------------------------------------------------- #
 
-def train_LeNet5(
-    num_gpus: int = 3,
-    use_gpu: int = 0,
-    batch_size: int = 2**10,
+def train_LeNet5_mul(
+    batch_size: int = 2**5,
     img_channels: int = 1,
-    num_workers: int = 4,
-    num_epochs: int = 10000,
+    num_workers: int = 6,
+    num_epochs: int = 5000,
     check_point: int = 20,
     lr: float = 0.001,
     save_root: str = "train/CNN/LeNet5/checkpoint/"
-): 
-
+):
     ##################
     # Hyperparameter #
     ##################
 
+    dist.init_process_group("nccl")
     os.makedirs(save_root, exist_ok=True)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # dist.init_process_group("nccl")
+    gpu_id = int(os.environ["LOCAL_RANK"])
 
     ###########
     # Prepare #
@@ -75,27 +68,29 @@ def train_LeNet5(
     train_loader = data.DataLoader(
         dataset=train_data,
         batch_size=batch_size,
-        shuffle=True,
+        sampler=data.DistributedSampler(train_data),
         num_workers=num_workers,
+        pin_memory=True
     )
 
     labels_temp = train_data.class_to_idx
     labels_map = dict(zip(labels_temp.values(), labels_temp.keys()))
 
-    model = nn.DataParallel(LeNet5(), list(range(num_gpus))).to(device)
+    model = LeNet5().to(gpu_id)
+    model = DDP(model, [gpu_id])
     model.apply(weights_init)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(gpu_id)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
-    # optimizer = DistributedOptimizer(optim.SGD, model.parameters(), lr=lr)
 
     #########
     # Train #
     #########
     
-    writer = SummaryWriter("Tensorboard/LeNet5")
+    writer = SummaryWriter("Tensorboard/CNN/LeNet5_mul")
 
     for epoch in tqdm(range(0, num_epochs + 1)):
+        train_loader.sampler.set_epoch(epoch)
         for imgs, labels in train_loader:
             optimizer.zero_grad()
 
@@ -103,8 +98,8 @@ def train_LeNet5(
             # Prepard #
             ###########
 
-            x = imgs.to(device)
-            y = labels.to(device)
+            x = imgs.to(gpu_id)
+            y = labels.to(gpu_id)
 
             ############
             # Training #

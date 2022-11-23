@@ -17,14 +17,16 @@ from tqdm import tqdm
 from torchsummary import summary
 from typing import Tuple
 
+# Multi GPU
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 # ---------------------------------------------------------------------------------- #
 
 def train_VanilaGAN(
-    num_gpus: int = 3,
-    use_gpu: int = 0,
-    batch_size: int = 512,
+    batch_size: int = 128,
     img_channels: int = 1,
-    num_workers: int = 4,
+    num_workers: int = 6,
     num_epochs: int = 5000,
     check_point : int = 20,
     latent_space_vector: int = 100,
@@ -34,8 +36,12 @@ def train_VanilaGAN(
     ):
 
     os.makedirs(save_root, exist_ok=True)
-    device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
 
+    if dist.is_torchelastic_launched():
+        if dist.is_nccl_available():
+            dist.init_process_group("nccl")
+            gpu_id = int(os.environ["LOCAL_RANK"])
+            
     if img_channels == 1:
         transform = transforms.Compose([
             transforms.ToTensor(),
@@ -57,18 +63,22 @@ def train_VanilaGAN(
     train_loader = data.DataLoader(
         dataset=train_data,
         batch_size=batch_size,
-        shuffle=False,
+        sampler=data.DistributedSampler(train_data),
         num_workers=num_workers,
+        pin_memory=True
     )
 
-    netG = Generator().to(device)
-    netD = Discriminator().to(device)
+    netG = Generator().to(gpu_id)
+    netD = Discriminator().to(gpu_id)
 
+    if dist.is_nccl_available():
+        netG = DDP(netG, [gpu_id])
+        netD = DDP(netD, [gpu_id])
 
     netG.apply(weights_init)
     netD.apply(weights_init)
 
-    criterion = nn.BCELoss().to(device)
+    criterion = nn.BCELoss()
 
     optim_G = optim.Adam(netG.parameters(), lr=lr, betas=betas)
     optim_D = optim.Adam(netD.parameters(), lr=lr, betas=betas)
@@ -76,13 +86,13 @@ def train_VanilaGAN(
     writer = SummaryWriter("Tensorboard/GAN/VanilaGAN")
 
     for epoch in tqdm(range(0, num_epochs + 1)):
+        train_loader.sampler.set_epoch(epoch)
         for imgs, _ in train_loader:
+            x = imgs.to(gpu_id)
+            fake = netG(torch.randn((x.size(0), latent_space_vector)).to(gpu_id))
 
-            x = imgs.to(device)
-            fake = netG(torch.randn((x.size(0), latent_space_vector)).to(device))
-
-            y_real = torch.ones((x.size(0), ), dtype= torch.float, device=device)
-            y_fake = torch.zeros((x.size(0), ), dtype=torch.float, device=device)
+            y_real = torch.ones((x.size(0), ), dtype= torch.float, device=gpu_id)
+            y_fake = torch.zeros((x.size(0), ), dtype=torch.float, device=gpu_id)
 
             # Train Discriminator
 
@@ -93,6 +103,7 @@ def train_VanilaGAN(
 
             loss_real = criterion(y_real_hat, y_real)
             loss_fake = criterion(y_fake_hat, y_fake)
+
             loss_D = (loss_real + loss_fake) / 2
 
             loss_D.backward()
@@ -102,13 +113,14 @@ def train_VanilaGAN(
 
             optim_G.zero_grad()
 
-            fake = netG(torch.randn((x.size(0), latent_space_vector)).to(device))
+            fake = netG(torch.randn((x.size(0), latent_space_vector)).to(gpu_id))
 
             y_fake_hat = netD(fake)
 
             loss_G = criterion(y_fake_hat, y_real)
             loss_G.backward()
             optim_G.step()
+
 
             if epoch % check_point == 0:
 
@@ -119,11 +131,11 @@ def train_VanilaGAN(
                 writer.add_image("VanilaGAN/Image/Fake", fake_grid, epoch)
                 writer.add_scalar("vanilaGAN/Scalar/Loss/netG", loss_G.item(), epoch)
                 writer.add_scalar("vanilaGAN/Scalar/Loss/netD", loss_D.item(), epoch)
-
+                
                 torch.save(netG.state_dict(), f"{save_root}/{epoch}_netG.pth")
                 torch.save(netD.state_dict(), f"{save_root}/{epoch}_netD.pth")
 
     writer.close()
-
+    dist.destroy_process_group()
 
             

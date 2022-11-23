@@ -37,8 +37,8 @@ class Generator(nn.Module):
 
             if h_feature == hidden_features[-1]:
                 layers += [
-                nn.Linear(h_feature, out_features),
-                nn.Softmax(1)
+                    nn.Linear(h_feature, out_features),
+                    nn.Tanh()
                 ]
             else:
                 in_features = h_feature
@@ -73,7 +73,7 @@ class Discriminator(nn.Module):
             if h_feature == hidden_features[-1]:
                 layers += [
                     nn.Linear(h_feature, out_features, bias=False),
-                    nn.Softmax(1)
+                    nn.Sigmoid()
                 ]
             else:
                 in_features = h_feature
