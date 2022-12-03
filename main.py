@@ -14,6 +14,3 @@ from train.GAN.DCGAN.train_DCGAN_mul import train_DCGAN_mul
 # train_ResNet()
 
 import torch
-
-x = torch.nn.Embedding(10, 10)
-print(x)
