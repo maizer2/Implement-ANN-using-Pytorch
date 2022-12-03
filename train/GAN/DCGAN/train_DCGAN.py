@@ -17,10 +17,6 @@ from tqdm import tqdm
 from torchsummary import summary
 from typing import Tuple
 
-# Multi GPU
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
-
 # --------------------------------------------------------------- #
 
 

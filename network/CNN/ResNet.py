@@ -133,6 +133,6 @@ class ResNet(nn.Module):
         x = self.layer4(x)
         x = self.layer5(x)
         x = self.avgpool(x)
-        x = x.view(x.shape[0], -1)
+        x = x.view(x.size(0), -1)
         x = self.layer6(x)
         return x

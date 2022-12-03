@@ -12,3 +12,8 @@ class Generator(nn.Module):
         out_channels: int = 1
         ):
         super().__init__()
+
+        
+
+    def forward(self, x):
+        return x

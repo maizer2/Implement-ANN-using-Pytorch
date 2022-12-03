@@ -23,7 +23,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 # --------------------------------------------------------------- #
 
-
 def train_DCGAN_mul(
     batch_size: int = 2**8,
     img_channels: int = 1,

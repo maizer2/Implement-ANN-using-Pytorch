@@ -42,18 +42,11 @@ def train_LeNet5(
     # Prepare #
     ###########
 
-    if img_channels == 3:
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            transforms.Resize((32, 32))
-        ])
-    elif img_channels == 1:
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5), (0.5)),
-            transforms.Resize((32, 32))
-        ])
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, ), (0.5, )),
+        transforms.Resize((32, 32))
+    ])
 
     train_data = datasets.MNIST(
         root="/data/DataSet/",
