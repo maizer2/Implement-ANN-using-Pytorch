@@ -1,6 +1,7 @@
 import torch.nn as nn
 
 from typing import Optional, List
+
 '''
 Using MNIST 1x28x28 DataSet
 '''

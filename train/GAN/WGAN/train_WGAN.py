@@ -1,4 +1,4 @@
-from network.GAN.CGAN import Generator, Discriminator
+from network.GAN.WGAN import Generator, Discriminator
 from network.weights_init import weights_init
 
 import torch
@@ -35,18 +35,18 @@ def get_opt():
     parser.add_argument("--img_std", default=(0.5, ))
     parser.add_argument("--batch_size", default=2**5)
     parser.add_argument("--latent_vector", default=100)
-    parser.add_argument("--lr", default=1e-2)
+    parser.add_argument("--lr", default=1e-7)
     parser.add_argument("--num_workers", default=6)
     parser.add_argument("--num_epochs", default=400)
     parser.add_argument("--check_point", default=20)
     parser.add_argument("--betas", default=(0.5, 0.999))
-    parser.add_argument("--save_root", default="train/GAN/CGAN")
+    parser.add_argument("--save_root", default="train/GAN/WGAN")
     opt = parser.parse_args()
     return opt
 
-# ---------------------------------------------------------------- #
+# --------------------------------------------------------------- #
 
-def train_CGAN():
+def train_WGAN():
 
     opt = get_opt()
 
@@ -84,48 +84,45 @@ def train_CGAN():
     netG = DDP(Generator().to(gpu_id), [gpu_id], broadcast_buffers=False).apply(weights_init)
     netD = DDP(Discriminator().to(gpu_id), [gpu_id], broadcast_buffers=False).apply(weights_init)
 
-    criterion = nn.BCELoss().to(gpu_id)
     optimG = optim.Adam(netG.parameters(), lr=opt.lr, betas=opt.betas)
     optimD = optim.Adam(netD.parameters(), lr=opt.lr, betas=opt.betas)
 
-    writer = SummaryWriter(f"Tensorboard/GAN/CGAN")
+    writer = SummaryWriter(f"Tensorboard/GAN/WGAN")
 
     for epoch in tqdm(range(0, opt.num_epochs + 1)):
-        for imgs, labels in train_loader:
+        for imgs, _ in train_loader:
 
             x = imgs.to(gpu_id)
             y_real = torch.ones((x.size(0), ), dtype=torch.float, device=gpu_id)
             y_fake = torch.zeros((x.size(0), ), dtype=torch.float, device=gpu_id)
 
             # Training Discriminator
-            z = torch.randn((x.size(0), opt.latent_vector), dtype=torch.float, device=gpu_id)
-            condition = nn.functional.one_hot(labels, num_classes=len(labels_map)).to(gpu_id)
+            z = torch.randn((x.size(0), opt.latent_vector, 1, 1), dtype=torch.float, device=gpu_id)
 
             optimD.zero_grad()
 
-            x_hat = netG(z, condition)
+            x_hat = netG(z)
 
             y_real_hat = netD(x)
             y_fake_hat = netD(x_hat)
 
-            loss_real = criterion(y_real_hat, y_real)
-            loss_fake = criterion(y_fake_hat, y_fake)
+            loss_real = torch.mean(y_real_hat)
+            loss_fake = torch.mean(y_fake_hat)
 
-            lossD = (loss_real + loss_fake) / 2
+            lossD = loss_fake - loss_real
             lossD.backward()
             optimD.step()
 
             # Training Generator
-            z = torch.randn((x.size(0), opt.latent_vector), dtype=torch.float, device=gpu_id)
-            condition = nn.functional.one_hot(labels, num_classes=len(labels_map)).to(gpu_id)
+            z = torch.randn((x.size(0), opt.latent_vector, 1, 1), dtype=torch.float, device=gpu_id)
 
             optimG.zero_grad()
 
-            x_hat = netG(z, condition)
+            x_hat = netG(z)
 
             y_fake_hat = netD(x_hat)
 
-            lossG = criterion(y_fake_hat, y_real)
+            lossG = -(torch.mean(y_fake_hat))
             lossG.backward()
             optimG.step()
 
@@ -134,11 +131,11 @@ def train_CGAN():
                 real_grid = utils.make_grid(x[:16], padding=3, normalize=True)
                 fake_grid = utils.make_grid(x_hat[:16], padding=3, normalize=True)
 
-                writer.add_image("CGAN/Image/Real", real_grid, epoch)
-                writer.add_image("CaGAN/Image/Fake", fake_grid, epoch)
+                writer.add_image("CDGAN/Image/Real", real_grid, epoch)
+                writer.add_image("VanilaGAN/Image/Fake", fake_grid, epoch)
 
-                writer.add_scalar(f"CGAN/Scalar/Loss/netG", lossG.item(), epoch)
-                writer.add_scalar(f"CGAN/Scalar/Loss/netD", lossD.item(), epoch)
+                writer.add_scalar(f"DCGAN/Scalar/Loss/netG", lossG.item(), epoch)
+                writer.add_scalar(f"DCGAN/Scalar/Loss/netD", lossD.item(), epoch)
                 torch.save(netG.state_dict(), f"{model_save_root}/{epoch}_netG.pth")
                 torch.save(netD.state_dict(), f"{model_save_root}/{epoch}_netD.pth")
                 

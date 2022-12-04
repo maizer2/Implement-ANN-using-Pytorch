@@ -5,102 +5,124 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as data
+import torch.distributed as dist
 
 import torchvision
+import torchvision.utils as utils
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
-import matplotlib.pyplot as plt
 import os
+import argparse
+import matplotlib.pyplot as plt
 
 from torch.utils.tensorboard import SummaryWriter
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 from tqdm import tqdm
-from typing import Tuple
+from typing import Tuple, NamedTuple
+from collections import namedtuple
+
+# ---------------------------------------------------------------- #
+
+def get_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_name", default="MNIST")
+    parser.add_argument("--data_root", default="/data/DataSet")
+    parser.add_argument("--img_channels", default=1)
+    parser.add_argument("--img_size", default=(224, 224))
+    parser.add_argument("--img_mean", default=(0.5, ))
+    parser.add_argument("--img_std", default=(0.5, ))
+    parser.add_argument("--batch_size", default=2**5)
+    parser.add_argument("--lr", default=1e-7)
+    parser.add_argument("--num_workers", default=6)
+    parser.add_argument("--num_epochs", default=5000)
+    parser.add_argument("--check_point", default=20)
+    parser.add_argument("--betas", default=(0.5, 0.999))
+    parser.add_argument("--vgg_layers", default=152) #34, 50, 101, 152
+    parser.add_argument("--save_root", default="train/CNN/VGG")
+    opt = parser.parse_args()
+    return opt
 
 # ------------------------------------------------------------------------ #
 
-def train_VGG(
-    num_gpus: int = 3,
-    use_gpu: int = 0,
-    batch_size: int = 500,
-    img_channels: int = 3,
-    layers: int = 11, #13, 16, 19
-    num_workers: int = 4,
-    num_epochs: int = 10000,
-    check_point: int = 20,
-    lr: float = 0.01,
-    betas: Tuple[float] = (0.5, 0.999),
-    save_root: str = "train/CNN/VGG/checkpoint/"
-    ):
+def get_vgg_config(vgg_layers):
 
-    os.makedirs(f"{save_root}/VGG{layers}", exist_ok=True)
-    device = torch.device(f"cuda:{use_gpu}" if torch.cuda.is_available() and num_gpus > 0 else "cpu")
+    if vgg_layers == vgg_layers:
+        vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
 
-    if img_channels == 3:
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            transforms.Resize((224, 224))
-        ])
-    elif img_channels == 1:
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5), (0.5)),
-            transforms.Resize((224, 224))
-        ])
+    elif vgg_layers == vgg_layers:
+        vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
+    
+    elif vgg_layers == vgg_layers:
+        vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M']
+
+    else: # layers == 11 or enter wrong number
+        vgg_config = [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
+
+    return vgg_config
+
+# ---------------------------------------------------------------- #
+
+def train_VGG():
+
+    opt = get_opt()
+
+    dist.init_process_group("nccl")
+    gpu_id = dist.get_rank()
+
+    model_save_root = f"{opt.save_root}/checkpoint/{opt.data_name}/VGG_{opt.vgg_layers}"
+    os.makedirs(model_save_root, exist_ok=True)
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(opt.img_mean, opt.img_std),
+        transforms.Resize(opt.img_size)
+    ])
 
     train_data = datasets.MNIST(
-        root="/data/DataSet/",
+        root=opt.data_root,
         train=True,
-        download=True,
-        transform=transform
+        transform=transform,
+        download=True
     )
 
     train_loader = data.DataLoader(
         dataset=train_data,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=num_workers
+        batch_size=opt.batch_size,
+        shuffle=False,
+        sampler=data.DistributedSampler(train_data),
+        num_workers=opt.num_workers,
+        pin_memory=True
     )
 
     labels_temp = train_data.class_to_idx
     labels_map = dict(zip(labels_temp.values(), labels_temp.keys()))
+        
+    vgg_config = get_vgg_config(opt.vgg_layers)
+    model = VGG(vgg_config).to(gpu_id).apply(weights_init)
 
-    if layers == 13:
-        vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
+    criterion = nn.CrossEntropyLoss().to(gpu_id)
+    optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=opt.betas)
 
-    elif layers == 16:
-        vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
-    
-    elif layers == 19:
-        vgg_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M']
+    writer = SummaryWriter(f"Tensorboard/CNN/VGG/VGG{opt.vgg_layers}")
 
-    else: # layers == 11 or enter wrong number
-        layers = 11
-        vgg_config = [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
-
-    model = VGG(vgg_config, in_channels=img_channels).to(device)
-    model.apply(weights_init)
-
-    criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=lr, betas=betas)
-
-    writer = SummaryWriter(f"Tensorboard/VGG/VGG{layers}")
-
-    for epoch in tqdm(range(0, num_epochs + 1)):
+    for epoch in tqdm(range(0, opt.num_epochs + 1)):
         for imgs, labels in train_loader:
             optimizer.zero_grad()
 
-            x = imgs.to(device)
-            y = labels.to(device)
+            x = imgs.to(gpu_id)
+            y = labels.to(gpu_id)
 
             y_hat = model(x)
             loss = criterion(y_hat, y)
             loss.backward()
             optimizer.step()
 
-            if epoch % check_point == 0:
-                writer.add_scalar(f"Loss/VGG/VGG{layers}/batch:{batch_size}, lr:{lr}", loss.item(), epoch)
-                torch.save(model.state_dict(), f"{save_root}/VGG{layers}/{epoch}_model.pth")
-
+            if epoch % opt.check_point == 0:
+                writer.add_scalar(f"Loss/VGG/VGG{opt.vgg_layers}", loss.item(), epoch)
+                torch.save(model.state_dict(), f"{model_save_root}/{epoch}_model.pth")
+                
+    torch.save(model.state_dict(), f"{model_save_root}/final.pth")
     writer.close()
+    dist.destroy_process_group()

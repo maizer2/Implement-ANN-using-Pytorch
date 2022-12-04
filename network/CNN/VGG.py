@@ -7,7 +7,7 @@ class VGG(nn.Module):
         self, 
         config: List[Union[int, str]],
         batch_norm: bool = True,
-        in_channels: int = 3,
+        in_channels: int = 1,
         out_features: int = 10
         ):
 

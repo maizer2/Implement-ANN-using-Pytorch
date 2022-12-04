@@ -23,6 +23,29 @@ from tqdm import tqdm
 from typing import Tuple, NamedTuple
 from collections import namedtuple
 
+# ---------------------------------------------------------------- #
+
+def get_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_name", default="MNIST")
+    parser.add_argument("--data_root", default="/data/DataSet")
+    parser.add_argument("--img_channels", default=1)
+    parser.add_argument("--img_size", default=(224, 224))
+    parser.add_argument("--img_mean", default=(0.5, ))
+    parser.add_argument("--img_std", default=(0.5, ))
+    parser.add_argument("--batch_size", default=2**5)
+    parser.add_argument("--lr", default=1e-7)
+    parser.add_argument("--num_workers", default=6)
+    parser.add_argument("--num_epochs", default=5000)
+    parser.add_argument("--check_point", default=20)
+    parser.add_argument("--betas", default=(0.5, 0.999))
+    parser.add_argument("--res_layers", default=152) #34, 50, 101, 152
+    parser.add_argument("--save_root", default="train/CNN/ResNet")
+    opt = parser.parse_args()
+    return opt
+
+# ---------------------------------------------------------------- #
+
 def get_resnet_config(res_layers) -> NamedTuple:
 
     resnet_config = namedtuple("resnet_config", ["block", "n_blocks", "channels"])
@@ -58,24 +81,6 @@ def get_resnet_config(res_layers) -> NamedTuple:
     return config
 
 # ---------------------------------------------------------------- #
-def get_opt():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data_name", default="MNIST")
-    parser.add_argument("--data_root", default="/data/DataSet")
-    parser.add_argument("--img_channels", default=1)
-    parser.add_argument("--img_size", default=(224, 224))
-    parser.add_argument("--img_mean", default=(0.5, ))
-    parser.add_argument("--img_std", default=(0.5, ))
-    parser.add_argument("--batch_size", default=2**5)
-    parser.add_argument("--lr", default=1e-7)
-    parser.add_argument("--num_workers", default=6)
-    parser.add_argument("--num_epochs", default=5000)
-    parser.add_argument("--check_point", default=20)
-    parser.add_argument("--betas", default=(0.5, 0.999))
-    parser.add_argument("--res_layers", default=152) #34, 50, 101, 152
-    parser.add_argument("--save_root", default="train/CNN/ResNet")
-    opt = parser.parse_args()
-    return opt
 
 def train_ResNet():
 
@@ -115,8 +120,7 @@ def train_ResNet():
     config = get_resnet_config(opt.res_layers)
 
     model = ResNet(config, opt.img_channels, len(labels_map)).to(gpu_id)
-    model = DDP(model, [gpu_id], broadcast_buffers=False)
-    model.apply(weights_init)
+    model = DDP(model, [gpu_id], broadcast_buffers=False).apply(weights_init)
 
     criterion = nn.CrossEntropyLoss().to(gpu_id)
     optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=opt.betas)
@@ -136,7 +140,7 @@ def train_ResNet():
             optimizer.step()
 
             if epoch % opt.check_point == 0:
-                writer.add_scalar(f"Loss/ResNet/ResNet{opt.res_layers}/", loss.item(), epoch)
+                writer.add_scalar(f"Loss/ResNet/ResNet{opt.res_layers}", loss.item(), epoch)
                 torch.save(model.state_dict(), f"{model_save_root}/{epoch}_model.pth")
                 
     torch.save(model.state_dict(), f"{model_save_root}/final.pth")

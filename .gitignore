@@ -31,3 +31,7 @@ train/GAN/DCGAN/__pycache__/train_dcgan.cpython-38.pyc
 train/GAN/DCGAN/__pycache__/train_DCGAN.cpython-38.pyc
 train/CNN/LeNet5/checkpoint/
 network/GAN/__pycache__/dcgan.cpython-38.pyc
+train/GAN/CGAN/train_CGAN.py
+train/GAN/CGAN/checkpoint/MNIST/
+train/GAN/CGAN/checkpoint/MNIST/
+train/GAN/CGAN/__pycache__/
