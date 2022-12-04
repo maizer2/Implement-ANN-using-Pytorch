@@ -35,3 +35,4 @@ train/GAN/CGAN/train_CGAN.py
 train/GAN/CGAN/checkpoint/MNIST/
 train/GAN/CGAN/checkpoint/MNIST/
 train/GAN/CGAN/__pycache__/
+test/DCGAN/
