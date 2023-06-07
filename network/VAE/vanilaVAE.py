@@ -22,7 +22,7 @@ class Encoder(nn.Module):
 
         self.encoder = nn.Sequential(*layers)
         self.mean = nn.Linear(hidden_dims[-1], latent_dim)
-        self.var = nn.Linear(hidden_dims[-1], latent_dim)
+        self.log_var = nn.Linear(hidden_dims[-1], latent_dim)
 
     def forward(self, x):
         # 1x28x28 -> 512x1x1
@@ -30,7 +30,7 @@ class Encoder(nn.Module):
         # 512
         x = x.view(x.size(0), -1)
         # 512 -> latent_dim
-        mean, var  = self.mean(x), self.var(x)
+        mean, log_var  = self.mean(x), self.log_var(x)
 
         return mean, var
 
@@ -87,8 +87,8 @@ class vanilaVAE(nn.Module):
         return std * epsilon + mean
 
     def forward(self, x):
-        mean, var = self.encoder(x)
-        z = self.reparameterization(mean, var)
+        mean, log_var = self.encoder(x)
+        z = self.reparameterization(mean, log_var)
         x_hat = self.decoder(z)
         return x_hat, mean, var
 
